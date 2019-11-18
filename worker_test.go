@@ -2,12 +2,19 @@ package goworker_test
 
 import (
 	"fmt"
-	"github.com/profiralex/goworker"
+	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 	"testing"
 	"time"
+
+	"github.com/profiralex/goworker"
 )
 
 var defaultTimeout = 5 * time.Second
+
+func init() {
+	log.SetOutput(ioutil.Discard)
+}
 
 func TestWorkerStartStopSuccess(t *testing.T) {
 	timeoutWaiter := time.After(defaultTimeout)

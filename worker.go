@@ -52,20 +52,14 @@ func (worker *Worker) runLoop() {
 
 func (worker *Worker) run() {
 	err := worker.performAction()
-	if err != nil {
-		worker.errorChan <- err
-		worker.closeChans()
-		log.Errorf("Worker failed: %s", err)
-		return
+	if err == nil {
+		err = worker.loop()
 	}
 
-	err = worker.loop()
+	worker.errorChan <- err
 	if err != nil {
-		worker.closeChans()
 		log.Errorf("Worker failed: %s", err)
-		return
 	}
-
 	worker.closeChans()
 }
 
@@ -76,7 +70,6 @@ func (worker *Worker) loop() error {
 	for run {
 		select {
 		case <-worker.stopChan:
-			worker.errorChan <- nil
 			run = false
 
 		case <-timer.C:
@@ -99,7 +92,6 @@ func (worker *Worker) loop() error {
 func (worker *Worker) performAction() error {
 	err := worker.action()
 	if err != nil {
-		worker.errorChan <- err
 		return fmt.Errorf("Worker action failed: %w", err)
 	}
 	return nil
