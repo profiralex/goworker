@@ -2,7 +2,7 @@ package goworker_test
 
 import (
 	"fmt"
-	"tango-team/goworker"
+	"github.com/profiralex/goworker"
 	"testing"
 	"time"
 )

@@ -1,4 +1,4 @@
-module tango-team/goworker
+module github.com/profiralex/goworker
 
 go 1.13
 
