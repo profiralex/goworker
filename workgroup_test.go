@@ -2,32 +2,26 @@ package goworker_test
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"io/ioutil"
 	"testing"
 	"time"
 
 	"github.com/profiralex/goworker"
 )
 
-var defaultTimeout = 5 * time.Second
-
-func init() {
-	log.SetOutput(ioutil.Discard)
-}
-
-func TestWorkerStartStopSuccess(t *testing.T) {
+func TestWorkGroupStartStopSuccess(t *testing.T) {
 	timeoutWaiter := time.After(defaultTimeout)
 	done := make(chan bool)
 
 	go func() {
-		var worker *goworker.Worker
 		testAction := func() error {
 			return nil
 		}
-		worker = goworker.CreateWorker("test worker", 150*time.Millisecond, testAction)
+		group := goworker.CreateWorkGroup(
+			goworker.CreateWorker("test worker 1", 150*time.Millisecond, testAction),
+			goworker.CreateWorker("test worker 2", 150*time.Millisecond, testAction),
+		)
 
-		errChan, err := worker.Start()
+		doneChan, err := group.Start()
 		if err != nil {
 			t.Errorf("Failed to start worker: %s", err)
 		}
@@ -35,13 +29,10 @@ func TestWorkerStartStopSuccess(t *testing.T) {
 		// Stop worker after 1 second
 		go func() {
 			time.Sleep(1 * time.Second)
-			worker.Stop()
+			group.Stop()
 		}()
 
-		err = <-errChan
-		if err != nil {
-			t.Errorf("Worker unexpectedly failed: %s", err)
-		}
+		_ = <-doneChan
 
 		done <- true
 	}()
@@ -53,18 +44,20 @@ func TestWorkerStartStopSuccess(t *testing.T) {
 	}
 }
 
-func TestWorkerStartStopError(t *testing.T) {
+func TestWorkGroupStartStopError(t *testing.T) {
 	timeoutWaiter := time.After(defaultTimeout)
 	done := make(chan bool)
 
 	go func() {
-		var worker *goworker.Worker
 		testAction := func() error {
 			return fmt.Errorf("random error")
 		}
-		worker = goworker.CreateWorker("test worker", 150*time.Millisecond, testAction)
+		group := goworker.CreateWorkGroup(
+			goworker.CreateWorker("test worker 1", 150*time.Millisecond, testAction),
+			goworker.CreateWorker("test worker 2", 150*time.Millisecond, testAction),
+		)
 
-		errChan, err := worker.Start()
+		doneChan, err := group.Start()
 		if err != nil {
 			t.Errorf("Failed to start worker: %s", err)
 		}
@@ -72,13 +65,10 @@ func TestWorkerStartStopError(t *testing.T) {
 		// Stop worker after 1 second
 		go func() {
 			time.Sleep(1 * time.Second)
-			worker.Stop()
+			group.Stop()
 		}()
 
-		err = <-errChan
-		if err == nil {
-			t.Errorf("Expected to receive an error")
-		}
+		_ = <-doneChan
 
 		done <- true
 	}()

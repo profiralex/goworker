@@ -8,6 +8,7 @@ import (
 
 // Worker performs periodic task at certain intervals
 type Worker struct {
+	name      string
 	interval  time.Duration
 	action    func() error
 	stopChan  chan bool
@@ -15,10 +16,11 @@ type Worker struct {
 }
 
 // CreateWorker creates a Worker to run at certain interval and to perform a certain action
-func CreateWorker(interval time.Duration, action func() error) *Worker {
+func CreateWorker(name string, interval time.Duration, action func() error) *Worker {
 	worker := Worker{}
 	worker.interval = interval
 	worker.action = action
+	worker.name = name
 
 	return &worker
 }
